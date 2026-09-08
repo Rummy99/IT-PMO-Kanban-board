@@ -15,11 +15,18 @@ the only source file; the rest of the repository is this file and the Pages depl
 Run it by opening the file directly — `file:///…/index.html` in a browser, or double-clicking it.
 There is no dev server, and adding one is not necessary.
 
-Since there is no test suite, verify behaviour changes by driving the page in a real browser. Chromium is
-available at `/opt/pw-browsers/chromium-*/chrome-linux/chrome`; `npm i playwright-core` into a scratch
-directory (never into this repo) and script against `file:///home/user/IT-PMO-Kanban-board/index.html`.
-Route-abort `https://formsubmit.co/**` so the notification failure path is exercised deterministically
-instead of sending real email.
+Since there is no test suite, verify behaviour changes by driving the page in a real browser. The
+project-level `.mcp.json` configures the Playwright MCP server for exactly this — navigate it to
+`file:///home/user/IT-PMO-Kanban-board/index.html` and drive the board directly. Two of its flags are
+load-bearing and should not be dropped: `--allow-unrestricted-file-access`, because the server blocks the
+`file:` protocol by default and this app is opened as a file, and `--executable-path`, because the default
+`chrome` channel is not installed here and `--browser chromium` resolves to a Chrome-for-Testing build
+whose version does not match the one present. Override the path with `PLAYWRIGHT_MCP_EXECUTABLE` on a
+machine where it differs.
+
+For scripted checks instead, `npm i playwright-core` into a scratch directory (never into this repo) and
+drive the same URL. Either way, route-abort `https://formsubmit.co/**` so the notification failure path is
+exercised deterministically instead of sending real email.
 
 Worth asserting after any change to the board: per-column `.count-badge` values, `.card` count,
 drag-and-drop and the `Move ▸` menu both changing a card's column, inline delete confirm, form validation

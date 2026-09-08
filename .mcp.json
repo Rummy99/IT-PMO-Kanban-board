@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@playwright/mcp@0.0.80",
+        "--headless",
+        "--isolated",
+        "--no-sandbox",
+        "--allow-unrestricted-file-access",
+        "--executable-path",
+        "${PLAYWRIGHT_MCP_EXECUTABLE:-/opt/pw-browsers/chromium-1194/chrome-linux/chrome}",
+        "--output-dir",
+        ".playwright-mcp"
+      ]
+    }
+  }
+}
