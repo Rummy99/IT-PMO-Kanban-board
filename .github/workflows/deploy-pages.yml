@@ -1,0 +1,55 @@
+# Publishes index.html to GitHub Pages.
+#
+# The site is a single static file, so there is nothing to build — the job
+# just stages index.html into _site/ and uploads it as the Pages artifact.
+# `configure-pages` with `enablement: true` turns Pages on for the repository
+# the first time this runs, so no manual setting change is needed.
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [claude/uob-it-pmo-kanban-t1mg4p]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Let a running deployment finish rather than cancelling it mid-publish.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Stage the site
+        run: |
+          mkdir -p _site
+          cp index.html _site/index.html
+          # Serve the file as-is; no Jekyll processing.
+          touch _site/.nojekyll
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

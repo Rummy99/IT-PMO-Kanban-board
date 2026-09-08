@@ -7,8 +7,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 A single-page IT project-management Kanban board for an internal "UOB IT PMO" demo/training tool.
 The entire application is one file: `index.html` (~1300 lines: markup, one `<style>` block, one `<script>` block).
 
-There is no package.json, no build step, no test runner, no linter, and no dependencies. The repository
-contains exactly one source file.
+There is no package.json, no build step, no test runner, no linter, and no dependencies. `index.html` is
+the only source file; the rest of the repository is this file and the Pages deployment workflow.
 
 ## Running and verifying changes
 
@@ -95,6 +95,21 @@ the board's perspective: `handleSubmit()` adds the card optimistically first, th
 `try/catch` that degrades to a warning toast. A FormSubmit failure must never block or break the board, and
 the email address must never be sent anywhere else.
 
+## Deployment
+
+`.github/workflows/deploy-pages.yml` publishes the board to GitHub Pages on every push to the default
+branch. There is nothing to build — the job copies `index.html` into `_site/` and uploads that as the Pages
+artifact, so only the app file is served, not `CLAUDE.md` or the workflow. `configure-pages` runs with
+`enablement: true`, so the workflow switches Pages on by itself rather than depending on a manual repo
+setting.
+
+Two deployment-specific gotchas are already handled and should stay that way: `_site/.nojekyll` stops Pages
+treating the upload as a Jekyll source tree, and the inline `data:image/svg+xml` favicon in `<head>`
+absorbs the browser's automatic `/favicon.ico` request, which would otherwise be a guaranteed 404 on the
+live site. A favicon must stay a data URI — shipping a `.ico`/`.png` would break the no-external-resources
+rule.
+
 ## Git
 
-Development happens on `claude/uob-it-pmo-kanban-t1mg4p`; push with `git push -u origin <branch>`.
+Development happens on `claude/uob-it-pmo-kanban-t1mg4p`, which is also the repository's default branch;
+push with `git push -u origin <branch>`.
