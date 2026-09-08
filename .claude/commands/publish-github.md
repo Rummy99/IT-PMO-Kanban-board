@@ -1,11 +1,11 @@
 ---
-description: Scan for secrets, push to GitHub, publish the site via Pages, then write the README and repo About.
+description: Scan for secrets, push to GitHub, publish via Pages, screenshot the site, then write the README and repo About.
 argument-hint: [repo URL or owner/name — omit to use the existing origin remote]
-allowed-tools: Bash(git:*), Bash(curl:*), Bash(grep:*), Bash(rg:*), Bash(ls:*), Bash(cat:*), Read, Write, Edit, Grep, Glob
+allowed-tools: Bash(git:*), Bash(curl:*), Bash(grep:*), Bash(rg:*), Bash(ls:*), Bash(cat:*), Bash(mkdir:*), Bash(mv:*), Read, Write, Edit, Grep, Glob, mcp__playwright__browser_navigate, mcp__playwright__browser_resize, mcp__playwright__browser_take_screenshot, mcp__playwright__browser_console_messages
 ---
 
-Publish this project to GitHub end to end: secret scan, push, Pages deployment, README, and the
-repository About blurb.
+Publish this project to GitHub end to end: secret scan, push, Pages deployment, screenshot, README, and
+the repository About blurb.
 
 Target repository: **$1** — if empty, use the current `origin` remote. Accept either a full URL
 (`https://github.com/owner/name`) or `owner/name`. If neither is given and there is no `origin`, stop and
@@ -96,15 +96,37 @@ Known blockers, worth checking before blaming the workflow:
 - Give the page an inline `data:` URI favicon. Browsers request `/favicon.ico` automatically on every
   load, and without one that is a guaranteed 404 on the live site.
 
-## 4. README
+## 4. Screenshot the running site
+
+Capture a current screenshot with the Playwright MCP server (configured in `.mcp.json`) so the README shows
+what the app actually looks like now, not what it looked like several changes ago:
+
+- `browser_navigate` to the live Pages URL if step 3 published one, otherwise to the local entry point —
+  for a `file://` app that is the file itself, which is why `.mcp.json` passes
+  `--allow-unrestricted-file-access`.
+- `browser_resize` to a desktop viewport (1440x1000 works well) so the layout is the wide one.
+- `browser_take_screenshot` with `fullPage: true` into `docs/screenshot.png`. The MCP `--output-dir` may
+  place it elsewhere; move it into `docs/` and confirm it landed.
+- Look at the image before committing it. A screenshot of an error page, an empty state, or a half-rendered
+  layout is worse than none. Re-capture if it is not representative.
+
+Re-run this on later invocations so the image does not go stale. If the app has meaningfully different
+states worth showing (mobile layout, a modal, a populated vs empty board), capture those too rather than
+relying on one shot to carry everything.
+
+Check whether the project forbids image files before committing one. If a no-external-resources rule
+exists, confirm it applies to the shipped app rather than to repository documentation — a README image the
+app never loads usually does not violate it — and say which reading you applied.
+
+## 5. README
 
 Create or update `README.md`. Edit around what is already there — preserve any hand-written sections
 rather than overwriting the file wholesale. Cover what the project is, how to run it locally, how it is
-deployed, and any constraints a contributor would otherwise break. Include the live Pages link once it
-exists. Keep it to what is true of this repository — do not invent badges, licences, roadmaps, or support
+deployed, and any constraints a contributor would otherwise break. Embed the screenshot from step 4 near
+the top with descriptive alt text, and include the live Pages link once it exists. Keep it to what is true of this repository — do not invent badges, licences, roadmaps, or support
 channels that were never agreed.
 
-## 5. Repository About
+## 6. Repository About
 
 Set the repo description and homepage so the Pages link appears in the About panel:
 
