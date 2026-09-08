@@ -8,6 +8,8 @@ Everything lives in one `index.html` — no build step, no dependencies, no serv
 
 ![The board on first load: a green-themed four-column Kanban with eight seeded demo tasks, live count badges and a summary strip](docs/screenshot.png)
 
+<sub>Current build — green theme. See [Design history](#design-history) for the original blue build.</sub>
+
 ## Features
 
 - **Four fixed columns** — Backlog, In Progress, Blocked, Done — each with a live count badge.
@@ -82,6 +84,28 @@ Two gaps are known and deliberate: `frame-ancestors` is ignored in a `<meta>` CS
 protection needs a real HTTP header; and the notification endpoint accepts unauthenticated posts from
 anyone, which is out of scope for a demo with no backend.
 
+## Design history
+
+The board shipped first in a corporate blue palette, then moved to the current green one. Both are the same
+markup and the same seeded data — the palette is defined once in the CSS custom-property block, so the
+revamp was a token change plus a contrast pass, not a rewrite.
+
+| Before — v1, blue | After — v2, green |
+| :--- | :--- |
+| ![Original build of the board in a corporate blue palette, with blue column accents and a blue Medium priority pill](docs/screenshot-v1-blue.png) | ![Current build in an enterprise green palette, with per-column accents, drag handles on each card and a green Medium priority pill](docs/screenshot.png) |
+
+What changed beyond the hue:
+
+- **Per-column accents.** v1 reused the priority colours for column headers, so In Progress and Medium
+  priority were the same blue. v2 gives each column its own accent — slate, teal, red, green — none of
+  which repeats a priority colour.
+- **Priority ramp.** Blue for Medium became green, giving a red → orange → green → slate severity ramp.
+- **Contrast fix.** The Low pill measured 4.20:1 in the green scheme, below the 4.5:1 WCAG AA threshold for
+  normal text (an 11px bold pill does not qualify as large text). Text use of that colour is now a darker
+  token at 5.48:1.
+- **Card affordances.** v2 adds a drag handle, a hover lift, a focus-within outline, and a drop-zone
+  treatment so empty columns still read as targets.
+
 ## Development
 
 `index.html` is the only *application* source file. All markup, CSS and JavaScript stay in it — do not
@@ -89,7 +113,8 @@ split it into separate files. (`tools/csp-hash.py` is a development helper, not 
 deployed site contains nothing but `index.html`.) The app ships no external resources: no CDN scripts, no web fonts, no image files. Icons
 are Unicode glyphs or inline SVG, and the favicon is a `data:` URI.
 
-The screenshot above is repository documentation, not an app asset — nothing in `index.html` references it.
+The screenshots are repository documentation, not app assets — nothing in `index.html` references them,
+and the Pages workflow publishes only `index.html`.
 
 State is a single `state = { tasks, filters, ui }` object. `renderBoard()` rebuilds the board from state on
 every change, so card contents are never mutated directly. Every user-supplied string passes through
