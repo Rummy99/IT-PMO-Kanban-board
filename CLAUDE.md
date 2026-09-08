@@ -8,7 +8,9 @@ A single-page IT project-management Kanban board for an internal "UOB IT PMO" de
 The entire application is one file: `index.html` (~1300 lines: markup, one `<style>` block, one `<script>` block).
 
 There is no package.json, no build step, no test runner, no linter, and no dependencies. `index.html` is
-the only source file; the rest of the repository is this file and the Pages deployment workflow.
+the only application source file — the deployed site is that file and nothing else. The rest of the
+repository is documentation, the Pages workflow, and `tools/csp-hash.py`, a development helper that keeps
+the CSP hashes in sync.
 
 ## Running and verifying changes
 
@@ -50,8 +52,15 @@ These are product requirements, not stylistic preferences. Violating any of them
 - **No native `alert()` / `confirm()` / `prompt()`.** Validation surfaces as inline `.error` text; delete
   confirmation is the inline "Delete? Yes / No" block inside the card.
 - **No `!important` in the CSS.**
-- **Branding.** Text wordmark and corporate blue palette only — no real logos, trademarks, or imitation of
-  an official system.
+- **The CSP hashes must stay in sync.** The `Content-Security-Policy` meta tag pins the inline `<style>`
+  and `<script>` by SHA-256. Editing either block invalidates its hash and the page then loads with no
+  styling and no behaviour — silently, with the reason only in the browser console. Run
+  `python3 tools/csp-hash.py` after any such edit, or `--check` to verify. Do not hand-compute the hashes:
+  the CSP comment mentions script and style tags in prose, and a loose regex matches those instead of the
+  real blocks, producing plausible hashes that break the page.
+- **Branding.** Text wordmark and the corporate green palette only — no real logos, trademarks, or
+  imitation of an official system. (This was a blue palette until the green revamp; the tokens are the
+  single place it is defined.)
 
 ## Architecture
 
@@ -85,6 +94,16 @@ this is the only thing standing between the app and XSS, since rendering is stri
 `toISOString()` for "today" — the latter is UTC and drifts across the date boundary. `dateOffset(n)` exists
 so seed data stays plausibly dated relative to whenever the demo is opened; seeds deliberately include past
 dates so the Overdue badge has something to show.
+
+**Security posture.** The app is unauthenticated and client-side, so the threat model is narrow but real:
+XSS through the string-concatenation rendering, and self-inflicted denial of service. `escapeHtml()` is the
+primary XSS control and the hash-pinned CSP is the second layer — `default-src 'none'` means an injected
+script tag will not execute and a beacon to any host but `formsubmit.co` is refused, even if the escaping
+were bypassed. `MAX_TASKS`, `MIN_SUBMIT_INTERVAL_MS` and the `AbortController` timeout in `notifyNewTask()`
+bound memory growth, resubmission floods and a hung third-party request respectively. `sanitizeText()`
+strips control characters at the one point where form input becomes state. Two known gaps, both deliberate:
+`frame-ancestors` is ignored in a `<meta>` CSP so clickjacking needs a real header, and the notification
+endpoint accepts unauthenticated posts from anyone — out of scope for a client-only demo.
 
 **Column list.** `COLUMNS` drives column rendering, the Move menu, the summary strip and status validation.
 Adding or renaming a column is a one-place edit there plus the matching `<option>` list and the

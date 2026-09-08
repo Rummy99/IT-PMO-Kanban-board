@@ -6,7 +6,7 @@ Everything lives in one `index.html` — no build step, no dependencies, no serv
 > This is an unofficial demo. It uses a plain text wordmark, carries no real logos or trademarks, and does
 > not imitate any production system. All task data is fictional.
 
-![The board on first load, showing eight seeded demo tasks across four columns](docs/screenshot.png)
+![The board on first load: a green-themed four-column Kanban with eight seeded demo tasks, live count badges and a summary strip](docs/screenshot.png)
 
 ## Features
 
@@ -63,10 +63,30 @@ cannot create a Pages site itself, so the workflow fails with `Resource not acce
 until that is done. Note that GitHub Pages is unavailable for **private** repositories on the Free plan —
 the repository has to be public, or the account on a paid plan.
 
+## Security
+
+The app is client-side and unauthenticated, so the threat model is narrow: cross-site scripting through the
+rendering path, and self-inflicted denial of service. Controls in place:
+
+- **Output escaping.** Every user-supplied string passes through `escapeHtml()` before reaching `innerHTML`.
+- **Hash-pinned CSP.** A `Content-Security-Policy` meta tag with `default-src 'none'` pins the inline
+  `<style>` and `<script>` by SHA-256. An injected script tag will not execute and a request to any host
+  other than `formsubmit.co` is refused — a second layer that holds even if the escaping were bypassed.
+  Run `python3 tools/csp-hash.py` after editing either inline block, or the page loads inert.
+- **`no-referrer`** so the page URL never leaks to the notification endpoint.
+- **Bounded resources.** A cap on board size, a throttle between submissions, and a timeout on the
+  outbound request so a hung third party cannot wedge the form.
+- **Control-character stripping** on form input before it enters state.
+
+Two gaps are known and deliberate: `frame-ancestors` is ignored in a `<meta>` CSP, so clickjacking
+protection needs a real HTTP header; and the notification endpoint accepts unauthenticated posts from
+anyone, which is out of scope for a demo with no backend.
+
 ## Development
 
-`index.html` is the only source file. All markup, CSS and JavaScript stay in it — do not split it into
-separate files. The app ships no external resources: no CDN scripts, no web fonts, no image files. Icons
+`index.html` is the only *application* source file. All markup, CSS and JavaScript stay in it — do not
+split it into separate files. (`tools/csp-hash.py` is a development helper, not shipped code, and the
+deployed site contains nothing but `index.html`.) The app ships no external resources: no CDN scripts, no web fonts, no image files. Icons
 are Unicode glyphs or inline SVG, and the favicon is a `data:` URI.
 
 The screenshot above is repository documentation, not an app asset — nothing in `index.html` references it.
