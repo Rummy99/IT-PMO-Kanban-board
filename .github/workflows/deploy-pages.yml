@@ -2,8 +2,12 @@
 #
 # The site is a single static file, so there is nothing to build — the job
 # just stages index.html into _site/ and uploads it as the Pages artifact.
-# `configure-pages` with `enablement: true` turns Pages on for the repository
-# the first time this runs, so no manual setting change is needed.
+# NOTE: Pages must be switched on once by a repo admin
+# (Settings > Pages > Source). `configure-pages` is set to enable it
+# automatically, but GITHUB_TOKEN cannot create a Pages site -- creating one
+# needs admin rights the Actions token never has, so the first run of this
+# workflow fails with "Create Pages site failed: Resource not accessible by
+# integration" until that setting is flipped by hand.
 name: Deploy to GitHub Pages
 
 on:

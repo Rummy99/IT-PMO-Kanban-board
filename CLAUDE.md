@@ -99,9 +99,14 @@ the email address must never be sent anywhere else.
 
 `.github/workflows/deploy-pages.yml` publishes the board to GitHub Pages on every push to the default
 branch. There is nothing to build — the job copies `index.html` into `_site/` and uploads that as the Pages
-artifact, so only the app file is served, not `CLAUDE.md` or the workflow. `configure-pages` runs with
-`enablement: true`, so the workflow switches Pages on by itself rather than depending on a manual repo
-setting.
+artifact, so only the app file is served, not `CLAUDE.md` or the workflow. Pages itself must be switched on once by a repo admin under
+Settings > Pages; `configure-pages` asks to enable it automatically, but `GITHUB_TOKEN` cannot create a
+Pages site (that needs admin rights the Actions token never has), so until the setting is flipped every
+run fails at that step with "Resource not accessible by integration".
+
+A root `.nojekyll` is committed as well as the staged one, so publishing straight from a branch (Settings >
+Pages > Source: Deploy from a branch, root folder) also works as a fallback that needs no workflow run and
+no OIDC token.
 
 Two deployment-specific gotchas are already handled and should stay that way: `_site/.nojekyll` stops Pages
 treating the upload as a Jekyll source tree, and the inline `data:image/svg+xml` favicon in `<head>`
